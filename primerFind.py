@@ -3,22 +3,48 @@ import logging
 import sys
 import os
 import re
+from datetime import datetime
 import subprocess
 import difflib
 from Bio import SeqIO
 
-def main():
+def fq_parse(file):
 
-    # Argument Parsing
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--seqs", help="Input text file of read sequences", required=True)
-    parser.add_argument("-p", "--primers", help="Input text file of primers to look for", required=True)
-    parser.add_argument("-v", "--verbose", help="Creates logging file with information for debugging", required=False, action='store_true')
-    parser.add_argument("-r", "--reporting", help="Generates reports containing sequences", required=False, action='store_true')
-    args = parser.parse_args()
+    logging.info('Parsing input reads..')
+
+    records = {}
+    total_reads = 0
+    uniq_reads = 0
+    for record in SeqIO.parse(file, "fastq"):
+        total_reads += 1
+        if records.get(str(record.seq)):
+            records[str(record.seq)].append(record.id)
+        else:
+            records[str(record.seq)] = [record.id]
+            uniq_reads += 1
+    logging.info('Total/unique = ' + str(total_reads) + "/" + str(uniq_reads))
+    return records
+
+
+def pr_parse(file):
+
+    logging.info('Parsing primers sequences..')
+
+    primers = []
+    for primer in open(file).read().splitlines():
+        primers.append(primer)
+
+    # Deduplicate primer seqs
+    logging.info('Submitted {} primer sequences..'.format(len(primers)))
+    primers = list(dict.fromkeys(primers))
+    logging.info('Total of {} unique sequences.'.format(len(primers)))
+
+    return primers
+
+def main(args):
 
     # Logging
-    log_name = args.seqs + '.log'
+    log_name = "primerFinder_{}.log".format(datetime.now().strftime("%y%m%d_%I%M%S"))
     if args.verbose:
         logging.basicConfig(filename=log_name, encoding='utf-8', level=getattr(logging, "DEBUG", None))
     else:
@@ -42,29 +68,12 @@ def main():
         return
 
     # Parse the input read sequences
-    logging.info('Parsing input reads..')
-    total_reads = 0
-    uniq_reads = 0
-    reads = {}
-    for read in open(seq_file).read().splitlines():
-        total_reads += 1
-        if reads.get(read):
-            reads[read] += 1
-        else:
-            reads[read] = 1
-            uniq_reads += 1
-    logging.info('Total/unique = ' + str(total_reads) + "/" + str(uniq_reads))
-
-    # Parse primer sequences
-    logging.info('Parsing primers sequences..')
-    primers = []
-    for primer in open(p_file).read().splitlines():
-        primers.append(primer)
-    # Deduplicate primer seqs
-    primers = list(dict.fromkeys(primers))
-    logging.info('Total unique primer seqs = ' + str(len(primers)))
+    reads = fq_parse(seq_file)
     
-
+    # Parse primer sequences
+    primers = pr_parse(p_file)
+    
+    #TODO prime candidate for threading/parallel work
     # Search for primer hits within reads
     logging.info('Beginning primer search..')
     loc = []
@@ -99,7 +108,7 @@ def main():
 
     total_nonp = 0
     for seq in reads.keys():
-        total_nonp += reads[seq]
+        total_nonp += len(reads[seq])
     avg_pos = sum(loc) / len(loc)
     logging.info("Average primer start position: " + str(avg_pos))
     logging.info("Unique read sequences without primer match: " + str(len(reads)))
@@ -110,5 +119,14 @@ def main():
         os.remove("primer_presence.log")
 
 if __name__ == "__main__":
-    main()
+
+    # Argument Parsing
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--seqs", help="Input text file of read sequences", required=True)
+    parser.add_argument("-p", "--primers", help="Input text file of primers to look for", required=True)
+    parser.add_argument("-v", "--verbose", help="Creates logging file with information for debugging", required=False, action='store_true')
+    parser.add_argument("-r", "--reporting", help="Generates reports containing sequences", required=False, action='store_true')
+    args = parser.parse_args()
+
+    main(args)
     
