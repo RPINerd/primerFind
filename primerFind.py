@@ -1,11 +1,9 @@
-import argparse
 import logging
 import sys
 import os
 import re
+import argparse
 from datetime import datetime
-import subprocess
-import difflib
 from Bio import SeqIO
 
 def fq_parse(file):
@@ -42,20 +40,6 @@ def pr_parse(file):
     return primers
 
 def main(args):
-
-    # Logging
-    log_name = "primerFinder_{}.log".format(datetime.now().strftime("%y%m%d_%I%M%S"))
-    if args.verbose:
-        logging.basicConfig(filename=log_name, encoding='utf-8', level=getattr(logging, "DEBUG", None))
-    else:
-        logging.basicConfig(filename=log_name, encoding='utf-8', level=getattr(logging, "INFO", None))
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(message)s')
-    handler.setFormatter(formatter)
-    root = logging.getLogger()
-    root.addHandler(handler)
-    logging.info('Logging started!')
 
     # Verify input files
     seq_file = args.seqs
@@ -119,6 +103,20 @@ def main(args):
         os.remove("primer_presence.log")
 
 if __name__ == "__main__":
+
+    # Logging
+    log_name = "primerFinder_{}.log".format(datetime.now().strftime("%y%m%d_%I%M%S"))
+    if args.verbose:
+        logging.basicConfig(filename=log_name, encoding='utf-8', level=getattr(logging, "DEBUG", None))
+    else:
+        logging.basicConfig(filename=log_name, encoding='utf-8', level=getattr(logging, "INFO", None))
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(message)s')
+    handler.setFormatter(formatter)
+    root = logging.getLogger()
+    root.addHandler(handler)
+    logging.info('Logging started!')
 
     # Argument Parsing
     parser = argparse.ArgumentParser()
