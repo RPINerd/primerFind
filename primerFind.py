@@ -104,6 +104,14 @@ def main(args):
 
 if __name__ == "__main__":
 
+    # Argument Parsing
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--seqs", help="Input text file of read sequences", required=True)
+    parser.add_argument("-p", "--primers", help="Input text file of primers to look for", required=True)
+    parser.add_argument("-v", "--verbose", help="Creates logging file with information for debugging", required=False, action='store_true')
+    parser.add_argument("-r", "--reporting", help="Generates reports containing sequences", required=False, action='store_true')
+    args = parser.parse_args()
+
     # Logging
     log_name = "primerFinder_{}.log".format(datetime.now().strftime("%y%m%d_%I%M%S"))
     if args.verbose:
@@ -117,14 +125,6 @@ if __name__ == "__main__":
     root = logging.getLogger()
     root.addHandler(handler)
     logging.info('Logging started!')
-
-    # Argument Parsing
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--seqs", help="Input text file of read sequences", required=True)
-    parser.add_argument("-p", "--primers", help="Input text file of primers to look for", required=True)
-    parser.add_argument("-v", "--verbose", help="Creates logging file with information for debugging", required=False, action='store_true')
-    parser.add_argument("-r", "--reporting", help="Generates reports containing sequences", required=False, action='store_true')
-    args = parser.parse_args()
 
     main(args)
     
