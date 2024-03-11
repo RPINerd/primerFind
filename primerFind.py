@@ -5,6 +5,7 @@
     Input is a plain text primers file with one sequence per line, as well as a fastq file
     to look up the sequences within
 """
+
 import argparse
 import logging
 import os
@@ -25,6 +26,7 @@ def parse_args():
         help="Creates logging file with information for debugging",
         required=False,
         action="store_true",
+        default="store_false",
     )
     parser.add_argument(
         "-r", "--reporting", help="Generates reports containing sequences", required=False, action="store_true"
@@ -34,9 +36,9 @@ def parse_args():
     return args
 
 
-def log_init(args):
+def log_init(verbose=False):
     log_name = "primerFinder_{}.log".format(datetime.now().strftime("%y%m%d_%I%M%S"))
-    if args.verbose:
+    if verbose:
         logging.basicConfig(filename=log_name, encoding="utf-8", level=getattr(logging, "DEBUG", None))
     else:
         logging.basicConfig(filename=log_name, encoding="utf-8", level=getattr(logging, "INFO", None))
@@ -145,6 +147,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    args = parse_args
-    log_init()
+    args = parse_args()
+    log_init(args.verbose)
     main(args)
